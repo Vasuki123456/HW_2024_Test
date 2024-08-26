@@ -1,6 +1,7 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 
 public class PulpitManager : MonoBehaviour
 {
@@ -19,6 +20,8 @@ public class PulpitManager : MonoBehaviour
 
     private Vector3? lastPosition = null;
     private Vector3? secondLastPosition = null;
+    public TextMeshProUGUI scoreText;
+    private int score = 0;
 
     private void Start()
     {
@@ -84,7 +87,14 @@ public class PulpitManager : MonoBehaviour
             if (previousPlatform != null && previousPlatform.GetComponent<PlatformTimer>().IsLifetimeExpired())
             {
                 platforms.Remove(previousPlatform);
+                if (previousPlatform != null)
+                {
+                    StartCoroutine(PopOut(previousPlatform));
+                    new WaitForSeconds(0.5f);
+                }
                 Destroy(previousPlatform);
+
+                IncrementScore();
 
                 previousPlatform = currentPlatform;
                 currentPlatform = SpawnPlatform();
@@ -115,7 +125,8 @@ public class PulpitManager : MonoBehaviour
 
     private GameObject SpawnPlatform()
     {
-        Vector3 spawnPosition;
+        Vector3 spawnPosition = Vector3.zero;
+
         if (previousPlatform != null)
         {
             Vector3 lastPlatformPosition = previousPlatform.transform.position;
@@ -128,20 +139,39 @@ public class PulpitManager : MonoBehaviour
             };
 
             Vector3 chosenDirection;
-            do
+            bool validPositionFound = false;
+            float minDistance = 1f;
+
+            while (!validPositionFound)
             {
                 chosenDirection = directions[Random.Range(0, directions.Length)];
                 spawnPosition = lastPlatformPosition + chosenDirection * platformOffset;
-            } while (spawnPosition == lastPlatformPosition ||
-                     (lastPosition.HasValue && spawnPosition == lastPosition.Value) ||
-                     (secondLastPosition.HasValue && spawnPosition == secondLastPosition.Value));
-        }
-        else
-        {
-            spawnPosition = Vector3.zero;
+
+                // Check if the new position is far enough from the last two positions
+                bool isTooClose = false;
+                if (lastPosition.HasValue && Vector3.Distance(spawnPosition, lastPosition.Value) < minDistance)
+                {
+                    isTooClose = true;
+                }
+                if (secondLastPosition.HasValue && Vector3.Distance(spawnPosition, secondLastPosition.Value) < minDistance)
+                {
+                    isTooClose = true;
+                }
+
+                if (!isTooClose)
+                {
+                    validPositionFound = true;
+                }
+            }
+
+            lastPosition = previousPlatform.transform.position;
         }
 
         GameObject platform = Instantiate(platformPrefab, spawnPosition, Quaternion.identity);
+        if (platform)
+        {
+            StartCoroutine(PopIn(platform));
+        }
         return platform;
     }
 
@@ -163,20 +193,29 @@ public class PulpitManager : MonoBehaviour
 
         Vector3 initialScale = new Vector3(0f, platform.transform.localScale.y, 0f);
         Vector3 targetScale = new Vector3(1f, platform.transform.localScale.y, 1f);
-        float duration = 0.5f;
+        float duration = 0.1f;
         float elapsedTime = 0f;
 
+        // Set initial scale
         platform.transform.localScale = initialScale;
 
+        // Define movement
+        Vector3 initialPosition = new Vector3(platform.transform.position.x, platform.transform.position.y - 1, platform.transform.position.z);
+        Vector3 targetPosition = platform.transform.position;
+
+        // Animation loop
         while (elapsedTime < duration)
         {
             float t = elapsedTime / duration;
             platform.transform.localScale = Vector3.Lerp(initialScale, targetScale, t);
+            platform.transform.position = Vector3.Lerp(initialPosition, targetPosition, t);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
+        // Ensure final state
         platform.transform.localScale = targetScale;
+        platform.transform.position = targetPosition;
     }
 
     private IEnumerator PopOut(GameObject platform)
@@ -188,17 +227,39 @@ public class PulpitManager : MonoBehaviour
 
         Vector3 initialScale = platform.transform.localScale;
         Vector3 targetScale = new Vector3(0f, platform.transform.localScale.y, 0f);
-        float duration = 0.5f;
+        float duration = 0.1f;
         float elapsedTime = 0f;
 
+        // Define movement
+        Vector3 initialPosition = platform.transform.position;
+        Vector3 targetPosition = new Vector3(platform.transform.position.x, platform.transform.position.y - 1, platform.transform.position.z);
+
+        // Animation loop
         while (elapsedTime < duration)
         {
             float t = elapsedTime / duration;
             platform.transform.localScale = Vector3.Lerp(initialScale, targetScale, t);
+            platform.transform.position = Vector3.Lerp(initialPosition, targetPosition, t);
             elapsedTime += Time.deltaTime;
             yield return null;
         }
 
+        // Ensure final state
         platform.transform.localScale = targetScale;
+        platform.transform.position = targetPosition;
+    }
+    private void IncrementScore()
+    {
+        score++;
+        UpdateScoreText();
+    }
+
+    private void UpdateScoreText()
+    {
+        Debug.Log(score.ToString());
+        if (scoreText != null)
+        {
+            scoreText.text = "Score: " + score.ToString();
+        }
     }
 }
