@@ -12,21 +12,30 @@ public class GameStateManager : MonoBehaviour
     public Button startButton;
     public TextMeshProUGUI scoreText;
     public PulpitManager platformManager;
+    public TextMeshProUGUI finText;
 
 
     void Start()
     {
         startScreen.SetActive(true);
         startButton.onClick.AddListener(StartGame);
-        Debug.Log("Button has been clicked!!!!!");
         restartButton.onClick.AddListener(RestartGame);
         restartButton.gameObject.SetActive(false);
         scoreText.text = "";
+        finText.text = "";
         Time.timeScale = 0f;
     }
 
     public void GameOver()
     {
+        if(platformManager.score>=50)
+        {
+            finText.text = "Congratulations! You beat the Game!!";
+        }
+        else
+        {
+            finText.text = "You died :(";
+        }
         restartButton.gameObject.SetActive(true);
         Time.timeScale = 0f;
     }
@@ -40,7 +49,6 @@ public class GameStateManager : MonoBehaviour
 
     public void StartGame()
     {
-        Debug.Log("Button has been clicked!!!!!");
         platformManager.Init();
         Time.timeScale = 1f;
         startScreen.SetActive(false);

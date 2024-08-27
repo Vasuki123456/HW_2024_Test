@@ -21,7 +21,7 @@ public class PulpitManager : MonoBehaviour
     private Vector3? lastPosition = null;
     private Vector3? secondLastPosition = null;
     public TextMeshProUGUI scoreText;
-    private int score = 0;
+    public int score = 0;
 
     public GameStateManager gameStateManager;
 
@@ -85,7 +85,7 @@ public class PulpitManager : MonoBehaviour
 
         while (true)
         {
-            if (player.position.y < -10f)
+            if (player.position.y < -10f || score >= 50)
             {
                 gameStateManager.GameOver();
                 yield break;
@@ -94,11 +94,11 @@ public class PulpitManager : MonoBehaviour
             if (previousPlatform != null && previousPlatform.GetComponent<PlatformTimer>().IsLifetimeExpired())
             {
                 platforms.Remove(previousPlatform);
-                if (previousPlatform != null)
-                {
-                    StartCoroutine(PopOut(previousPlatform));
-                    new WaitForSeconds(0.5f);
-                }
+                // if (previousPlatform != null)
+                // {
+                //     StartCoroutine(PopOut(previousPlatform));
+                //     new WaitForSeconds(0.5f);
+                // }
                 Destroy(previousPlatform);
 
                 IncrementScore();
@@ -225,36 +225,36 @@ public class PulpitManager : MonoBehaviour
         platform.transform.position = targetPosition;
     }
 
-    private IEnumerator PopOut(GameObject platform)
-    {
-        if (platform == null)
-        {
-            yield break;
-        }
+    // private IEnumerator PopOut(GameObject platform)
+    // {
+    //     if (platform == null)
+    //     {
+    //         yield break;
+    //     }
 
-        Vector3 initialScale = platform.transform.localScale;
-        Vector3 targetScale = new Vector3(0f, platform.transform.localScale.y, 0f);
-        float duration = 0.1f;
-        float elapsedTime = 0f;
+    //     Vector3 initialScale = platform.transform.localScale;
+    //     Vector3 targetScale = new Vector3(0f, platform.transform.localScale.y, 0f);
+    //     float duration = 0.1f;
+    //     float elapsedTime = 0f;
 
-        // Define movement
-        Vector3 initialPosition = platform.transform.position;
-        Vector3 targetPosition = new Vector3(platform.transform.position.x, platform.transform.position.y - 1, platform.transform.position.z);
+    //     // Define movement
+    //     Vector3 initialPosition = platform.transform.position;
+    //     Vector3 targetPosition = new Vector3(platform.transform.position.x, platform.transform.position.y - 1, platform.transform.position.z);
 
-        // Animation loop
-        while (elapsedTime < duration)
-        {
-            float t = elapsedTime / duration;
-            platform.transform.localScale = Vector3.Lerp(initialScale, targetScale, t);
-            platform.transform.position = Vector3.Lerp(initialPosition, targetPosition, t);
-            elapsedTime += Time.deltaTime;
-            yield return null;
-        }
+    //     // Animation loop
+    //     while (elapsedTime < duration)
+    //     {
+    //         float t = elapsedTime / duration;
+    //         platform.transform.localScale = Vector3.Lerp(initialScale, targetScale, t);
+    //         platform.transform.position = Vector3.Lerp(initialPosition, targetPosition, t);
+    //         elapsedTime += Time.deltaTime;
+    //         yield return null;
+    //     }
 
-        // Ensure final state
-        platform.transform.localScale = targetScale;
-        platform.transform.position = targetPosition;
-    }
+    //     // Ensure final state
+    //     platform.transform.localScale = targetScale;
+    //     platform.transform.position = targetPosition;
+    // }
     private void IncrementScore()
     {
         score++;
